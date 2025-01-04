@@ -1,0 +1,14 @@
+version: "3.7"
+
+services:
+    openttd:
+        container_name: openttd
+        image: bateau/openttd:${openttd_version}
+        restart: unless-stopped
+        ports:
+            - 3979:3979/tcp
+            - 3979:3979/udp
+        volumes:
+            - ./server:/home/openttd/.openttd
+        environment:
+            - loadgame=last-autosave

@@ -1,0 +1,41 @@
+#cloud-config
+packages:
+  - curl
+  - docker.io
+  - docker-compose
+  - fail2ban
+  - apparmor
+
+users:
+  - name: game
+    ssh-authorized-keys:
+      - ${ssh_public_key}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    shell: /bin/bash
+    groups:
+      - sudo
+
+package_update: true
+package_upgrade: true
+
+write_files:
+  - path: /opt/openttd/docker-compose.yaml
+    content: |
+      ${docker_compose}
+    owner: 'game:game'
+    defer: true
+  - path: /opt/openttd/server/openttd.cfg
+    content: |
+      ${openttd_config}
+    owner: 'game:game'
+    defer: true
+
+runcmd:
+
+  # Basic SSH hardening
+  - sed -i '/PermitRootLogin/d' /etc/ssh/sshd_config
+  - echo "PermitRootLogin no" >> /etc/ssh/sshd_config
+  - systemctl restart sshd
+
+  - systemctl enable --now docker
+  - cd /opt/openttd && docker-compose up -d
